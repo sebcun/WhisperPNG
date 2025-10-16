@@ -35,7 +35,7 @@
               class="dropzone d-flex flex-column align-items-center justify-content-center mb-3"
               role="button"
               tabindex="0"
-              aria-label="File upload dropzone. Click to browse files or drag and drop files here."
+              aria-label="File upload."
             >
               <div class="fw-semibold">Drag &amp; Drop Files Here</div>
               <div class="text-muted small mt-2">OR</div>
@@ -95,5 +95,119 @@
       integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
       crossorigin="anonymous"
     ></script>
+
+    <script>
+      (function () {
+        const fileInput = document.getElementById("fileInput");
+        const browseBtn = document.getElementById("browseBtn");
+        const dropzone = document.getElementById("dropzone");
+        const fileName = document.getElementById("fileName");
+        const message = document.getElementById("message");
+        const uploadBtn = document.getElementById("uploadBtn");
+        const form = document.querySelector("form");
+
+        function isPngFile(file) {
+          if (!file) return false;
+          const mimeOk = file.type === "image/png";
+          const extOk = file.name && file.name.toLowerCase().endsWith(".png");
+          return mimeOk || extOk;
+        }
+
+        function showFileInfo(text, isError = false) {
+          fileName.textContent = text;
+          fileName.classList.toggle("text-danger", isError);
+          fileName.classList.toggle("text-muted", !isError);
+        }
+
+        function setFileToInput(file) {
+          const dt = new DataTransfer();
+          dt.items.add(file);
+          fileInput.files = dt.files;
+          updateFileUI(file);
+        }
+
+        function updateFileUI(file) {
+          if (!file) {
+            showFileInfo("");
+            dropzone.classList.remove("border", "border-2", "border-success");
+            return;
+          }
+          if (!isPngFile(file)) {
+            showFileInfo("Invalid file type. Please select a PNG.", true);
+            fileInput.value = "";
+            dropzone.classList.remove("border", "border-success");
+            dropzone.classList.add("border", "border-2", "border-danger");
+            return;
+          }
+          showFileInfo(file.name || "Selected file");
+          dropzone.classList.remove("border-danger");
+          dropzone.classList.add("border", "border-2", "border-success");
+        }
+
+        function updateUploadState() {
+          const hasFile = fileInput.files && fileInput.files.length > 0;
+          const hasText = message.value.trim().length > 0;
+          uploadBtn.disabled = !(hasFile && hasText);
+        }
+
+        browseBtn.addEventListener("click", function () {
+          fileInput.click();
+        });
+
+        fileInput.addEventListener("change", function () {
+          const f = fileInput.files && fileInput.files[0];
+          updateFileUI(f);
+          updateUploadState();
+        });
+
+        ["dragenter", "dragover"].forEach((evt) =>
+          dropzone.addEventListener(evt, function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.add(
+              "bg-light",
+              "border",
+              "border-2",
+              "border-primary"
+            );
+          })
+        );
+
+        ["dragleave", "drop"].forEach((evt) =>
+          dropzone.addEventListener(evt, function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.remove(
+              "bg-light",
+              "border",
+              "border-2",
+              "border-primary"
+            );
+          })
+        );
+
+        dropzone.addEventListener("drop", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          const dt = e.dataTransfer;
+          if (dt && dt.files && dt.files.length > 0) {
+            const f = dt.files[0];
+            setFileToInput(f);
+            updateUploadState();
+          }
+        });
+
+        message.addEventListener("input", updateUploadState);
+
+        form.addEventListener("submit", function (e) {
+          if (uploadBtn.disabled) {
+            e.preventDefault();
+          }
+        });
+
+        updateFileUI(null);
+        updateUploadState();
+      })();
+    </script>
   </body>
 </html>
