@@ -81,6 +81,51 @@
       </form>
     </main>
 
+    <div
+      class="modal fade"
+      id="resultModal"
+      tabindex="-1"
+      aria-labelledby="resultModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="resultModalLabel">Decoded text</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <pre
+              id="resultText"
+              class="mb-0"
+              style="white-space: pre-wrap; word-break: break-word"
+            ></pre>
+          </div>
+          <div class="modal-footer">
+            <button
+              id="copyResultBtn"
+              type="button"
+              class="btn btn-outline-secondary btn-sm"
+            >
+              Copy
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
       integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
@@ -95,6 +140,12 @@
         const fileName = document.getElementById("fileName");
         const uploadBtn = document.getElementById("uploadBtn");
         const form = document.querySelector("form");
+
+        const resultModalEl = document.getElementById("resultModal");
+        const resultModal = new bootstrap.Modal(resultModalEl, {});
+        const resultTextEl = document.getElementById("resultText");
+        const resultModalLabel = document.getElementById("resultModalLabel");
+        const copyResultBtn = document.getElementById("copyResultBtn");
 
         function isPngFile(file) {
           if (!file) return false;
@@ -192,6 +243,32 @@
           }
         });
 
+        copyResultBtn.addEventListener("click", async function () {
+          const txt = resultTextEl.innerText || "";
+          try {
+            await navigator.clipboard.writeText(txt);
+            const original = copyResultBtn.textContent;
+            copyResultBtn.textContent = "Copied!";
+            setTimeout(() => (copyResultBtn.textContent = original), 1200);
+          } catch (e) {
+            try {
+              const range = document.createRange();
+              range.selectNodeContents(resultTextEl);
+              const sel = window.getSelection();
+              sel.removeAllRanges();
+              sel.addRange(range);
+              document.execCommand("copy");
+              sel.removeAllRanges();
+              const original = copyResultBtn.textContent;
+              copyResultBtn.textContent = "Copied!";
+              setTimeout(() => (copyResultBtn.textContent = original), 1200);
+            } catch (_) {
+              copyResultBtn.textContent = "Unable to copy";
+              setTimeout(() => (copyResultBtn.textContent = "Copy"), 1200);
+            }
+          }
+        });
+
         form.addEventListener("submit", async function (e) {
           e.preventDefault();
 
@@ -199,13 +276,17 @@
             return;
           }
           if (!fileInput.files || fileInput.files.length === 0) {
-            alert("Please select a PNG file to decode.");
+            resultModalLabel.textContent = "No file selected";
+            resultTextEl.textContent = "Please select a PNG file to decode.";
+            resultModal.show();
             return;
           }
 
           const file = fileInput.files[0];
           if (!isPngFile(file)) {
-            alert("Selected file is not a PNG.");
+            resultModalLabel.textContent = "Invalid file";
+            resultTextEl.textContent = "Selected file is not a PNG.";
+            resultModal.show();
             return;
           }
 
@@ -241,14 +322,21 @@
                 (json.message ||
                   json.text ||
                   json.result ||
-                  JSON.stringify(json));
+                  JSON.stringify(json, null, 2));
             } catch (jsonErr) {
               decoded = await resp.text();
             }
 
-            alert(decoded || "This wasn't encoded by WhisperPNG!");
+            resultModalLabel.textContent = "Decoded text";
+            resultTextEl.textContent =
+              decoded && decoded.length > 0
+                ? decoded
+                : "This wasn't encoded by WhisperPNG!";
+            resultModal.show();
           } catch (err) {
-            alert("Decode error: " + (err.message || err));
+            resultModalLabel.textContent = "Decode error";
+            resultTextEl.textContent = err.message || String(err);
+            resultModal.show();
           } finally {
             uploadBtn.disabled = false;
             uploadBtn.textContent = originalText;
