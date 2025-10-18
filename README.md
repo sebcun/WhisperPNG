@@ -4,10 +4,7 @@ A small website built using Python and Flask using a simple Bootstrap UI where y
 
 # Demo
 
-<video controls width="720">
-  <source src="https://hc-cdn.hel1.your-objectstorage.com/s/v3/47464295303317ce73848f05ecc40e8af6332512_chrome_19-october-2025_09-19.35.mp4" type="video/mp4">
-  Your browser does not support the video tag. <a href="https://hc-cdn.hel1.your-objectstorage.com/s/v3/47464295303317ce73848f05ecc40e8af6332512_chrome_19-october-2025_09-19.35.mp4">Watch Demo</a>.
-</video>
+[Click here for a demo video](https://hc-cdn.hel1.your-objectstorage.com/s/v3/47464295303317ce73848f05ecc40e8af6332512_chrome_19-october-2025_09-19.35.mp4)
 
 ## Installation
 
